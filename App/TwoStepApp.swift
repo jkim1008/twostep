@@ -4,7 +4,7 @@ import SwiftUI
 struct TwoStepApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            AppShellView()
         }
     }
 }
