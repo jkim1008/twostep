@@ -1,0 +1,13 @@
+opt_in_rules:
+  - force_unwrapping        # PRD §8: no force-unwraps in production code
+  - empty_count
+  - closure_spacing
+  - explicit_init
+excluded:
+  - TwoStep.xcodeproj
+  - TwoStepCore/.build
+line_length:
+  warning: 140
+  error: 200
+identifier_name:
+  min_length: 2

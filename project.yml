@@ -1,0 +1,44 @@
+name: TwoStep
+options:
+  bundleIdPrefix: com.josephkim
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+packages:
+  TwoStepCore:
+    path: TwoStepCore
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Automatic
+targets:
+  TwoStep:
+    type: application
+    platform: iOS
+    sources: [App]
+    dependencies:
+      - package: TwoStepCore
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Two Step
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.josephkim.twostep
+        TARGETED_DEVICE_FAMILY: "1"
+  TwoStepUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: TwoStep
+schemes:
+  TwoStep:
+    build:
+      targets:
+        TwoStep: all
+        TwoStepUITests: [test]
+    test:
+      targets: [TwoStepUITests]
