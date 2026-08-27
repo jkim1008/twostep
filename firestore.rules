@@ -1,11 +1,144 @@
 rules_version = '2';
+
+// Membership-scoped rules (PRD §6.4). The invariants, each proven by a test
+// in rules-tests/rules.test.js:
+//
+//   * Everything financial lives under /households/{hid}; access is gated on
+//     `request.auth.uid in memberUids` — the denormalized array on the
+//     household doc is the rules gate AND the "find my household" query.
+//   * Membership is only ever mutated by Cloud Functions: household create,
+//     member docs, invites are all client-write-denied, and household updates
+//     may never touch memberUids/ownerUid.
+//   * /plaidTokens and /siwaTokens are Admin-SDK-only: deny ALL client access.
+//   * Transaction writes validate the money invariants: amountMinor is an
+//     integer (minor units), attributedTo resolves to "joint" or a member doc
+//     of ANY status (active or left — departed partners' history must stay
+//     editable), and source/Plaid-identity fields are immutable once set.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Baseline: deny everything. M1 replaces this with membership-scoped
-    // household rules, landed together with their emulator test suite —
-    // no collection opens up without a rules test proving its boundary.
-    match /{document=**} {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ---- /users/{uid}: a user's own profile doc, self-access only ----
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---- CF-mediated collections: no client access, ever ----
+    match /invites/{document=**} {
       allow read, write: if false;
+    }
+    match /plaidTokens/{document=**} {
+      allow read, write: if false;
+    }
+    match /siwaTokens/{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---- The household subtree ----
+    match /households/{hid} {
+
+      // Membership gate for subcollections (one get() per request; the
+      // household doc itself uses resource.data directly).
+      function isMember() {
+        return isSignedIn()
+          && request.auth.uid in
+             get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
+      }
+
+      // attributedTo must be "joint" or a uid holding a member doc of ANY
+      // status — validating against live memberUids would break every edit
+      // to a departed partner's historical transactions (PRD §6.3).
+      function isValidAttribution() {
+        return request.resource.data.attributedTo == 'joint'
+          || (request.resource.data.attributedTo is string
+              && exists(/databases/$(database)/documents/households/$(hid)/members/$(request.resource.data.attributedTo)));
+      }
+
+      // Immutable-once-set: a field absent from the stored doc may be added,
+      // but once present it can never change or be removed by a client.
+      function unchangedIfSet(field) {
+        return !(field in resource.data)
+          || (field in request.resource.data
+              && request.resource.data[field] == resource.data[field]);
+      }
+
+      // Read gated on the memberUids array itself, so the client's
+      // "find my household" array-contains query is permitted.
+      allow read: if isSignedIn() && request.auth.uid in resource.data.memberUids;
+      // Households are created/deleted only by Cloud Functions.
+      allow create, delete: if false;
+      // Members may update household settings (name, weeklySync, ...) but
+      // never the membership fields.
+      allow update: if isSignedIn()
+        && request.auth.uid in resource.data.memberUids
+        && !request.resource.data.diff(resource.data)
+              .affectedKeys().hasAny(['memberUids', 'ownerUid']);
+
+      // -- CF-owned subcollections: member-readable, client-write-denied --
+      match /members/{memberUid} {
+        allow read: if isMember();
+        allow write: if false;
+      }
+      match /plaidItems/{itemId} {
+        allow read: if isMember();
+        allow write: if false;
+      }
+      match /events/{eventId} {
+        allow read: if isMember();
+        allow write: if false;
+      }
+      match /digests/{weekKey} {
+        allow read: if isMember();
+        allow write: if false;
+      }
+
+      // -- Member-owned subcollections: full member CRUD --
+      match /accounts/{accountId} {
+        allow read, write: if isMember();
+      }
+      match /categories/{categoryId} {
+        allow read, write: if isMember();
+      }
+      match /categoryRules/{merchantKey} {
+        allow read, write: if isMember();
+      }
+      match /budgets/{monthKey} {
+        allow read, write: if isMember();
+      }
+      match /goals/{goalId} {
+        allow read, write: if isMember();
+
+        match /contributions/{contributionId} {
+          allow read, write: if isMember();
+        }
+      }
+      match /recurringItems/{recurringItemId} {
+        allow read, write: if isMember();
+      }
+
+      // -- Transactions: member CRUD with money-invariant validation --
+      match /transactions/{txnId} {
+        function txnInvariantsHold() {
+          return request.resource.data.amountMinor is int
+            && isValidAttribution();
+        }
+
+        allow read: if isMember();
+        allow create: if isMember() && txnInvariantsHold();
+        // User-owned fields (categoryId, attributedTo, notes,
+        // excludeFromBudget, isHidden, discussion flags, ...) are freely
+        // editable; source and Plaid-identity fields are frozen once set.
+        allow update: if isMember()
+          && txnInvariantsHold()
+          && unchangedIfSet('source')
+          && unchangedIfSet('pendingTransactionId');
+        // Only manual entries are client-deletable — imported history is
+        // hidden via flags, never hard-deleted by users (PRD §4.3).
+        allow delete: if isMember() && resource.data.source == 'manual';
+      }
     }
   }
 }
