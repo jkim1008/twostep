@@ -11,7 +11,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: 2XW7S9ULZZ
+    DEVELOPMENT_TEAM: 3DRBN7MB8U
 targets:
   TwoStep:
     type: application
@@ -29,14 +29,14 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kadiamtech.twostep
         TARGETED_DEVICE_FAMILY: "1"
-        DEVELOPMENT_TEAM: 2XW7S9ULZZ
+        DEVELOPMENT_TEAM: 3DRBN7MB8U
   TwoStepUITests:
     type: bundle.ui-testing
     platform: iOS
     sources: [UITests]
     settings:
       base:
-        DEVELOPMENT_TEAM: 2XW7S9ULZZ
+        DEVELOPMENT_TEAM: 3DRBN7MB8U
     dependencies:
       - target: TwoStep
 schemes:
