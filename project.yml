@@ -29,10 +29,14 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kadiamtech.twostep
         TARGETED_DEVICE_FAMILY: "1"
+        DEVELOPMENT_TEAM: 2XW7S9ULZZ
   TwoStepUITests:
     type: bundle.ui-testing
     platform: iOS
     sources: [UITests]
+    settings:
+      base:
+        DEVELOPMENT_TEAM: 2XW7S9ULZZ
     dependencies:
       - target: TwoStep
 schemes:
