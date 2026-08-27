@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Baseline: deny everything. M1 replaces this with membership-scoped
+    // household rules, landed together with their emulator test suite —
+    // no collection opens up without a rules test proving its boundary.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
