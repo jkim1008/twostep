@@ -30,6 +30,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.kadiamtech.twostep
         TARGETED_DEVICE_FAMILY: "1"
         DEVELOPMENT_TEAM: 3DRBN7MB8U
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   TwoStepUITests:
     type: bundle.ui-testing
     platform: iOS
