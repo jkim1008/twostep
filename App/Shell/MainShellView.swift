@@ -13,7 +13,23 @@ struct MainShellView: View {
         case recurring
     }
 
-    @State private var selection: ShellTab = .dashboard
+    @State private var selection: ShellTab = MainShellView.demoInitialTab
+
+    /// Screenshot/demo automation: `-demoInitialTab expenses|budget|dashboard|savings|recurring`
+    /// selects the starting tab (used by headless capture and, later, App Store screenshots).
+    private static var demoInitialTab: ShellTab {
+        let args = ProcessInfo.processInfo.arguments
+        guard let flag = args.firstIndex(of: "-demoInitialTab"), args.indices.contains(flag + 1) else {
+            return .dashboard
+        }
+        switch args[flag + 1] {
+        case "expenses": return .expenses
+        case "budget": return .budget
+        case "savings": return .savings
+        case "recurring": return .recurring
+        default: return .dashboard
+        }
+    }
 
     var body: some View {
         TabView(selection: $selection) {
@@ -63,6 +79,20 @@ private struct HouseholdChromeModifier: ViewModifier {
             .sheet(isPresented: $showPlaybook) { PlaybookView() }
             .sheet(isPresented: $showAlertCenter) { AlertCenterView() }
             .sheet(isPresented: $showQuickAdd) { QuickAddView() }
+            .task { applyDemoPresentation() }
+    }
+
+    /// Screenshot/demo automation: `-demoPresent playbook|alerts|quickadd` opens
+    /// the matching sheet on launch (headless capture cannot tap).
+    private func applyDemoPresentation() {
+        let args = ProcessInfo.processInfo.arguments
+        guard let flag = args.firstIndex(of: "-demoPresent"), args.indices.contains(flag + 1) else { return }
+        switch args[flag + 1] {
+        case "playbook": showPlaybook = true
+        case "alerts": showAlertCenter = true
+        case "quickadd": showQuickAdd = true
+        default: break
+        }
     }
 
     private var avatarButton: some View {
