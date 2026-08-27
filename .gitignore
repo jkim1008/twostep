@@ -21,3 +21,6 @@ GoogleService-Info.plist
 node_modules/
 firestore-debug.log
 firebase-debug.log
+
+# Agent worktrees (never commit)
+.claude/worktrees/
