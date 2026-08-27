@@ -9,7 +9,7 @@ struct PFCMapperTests {
             "INCOME", "TRANSFER_IN", "TRANSFER_OUT", "LOAN_PAYMENTS",
             "BANK_FEES", "ENTERTAINMENT", "FOOD_AND_DRINK", "GENERAL_MERCHANDISE",
             "HOME_IMPROVEMENT", "MEDICAL", "PERSONAL_CARE", "GENERAL_SERVICES",
-            "GOVERNMENT_AND_NON_PROFIT", "TRANSPORTATION", "TRAVEL", "RENT_AND_UTILITIES",
+            "GOVERNMENT_AND_NON_PROFIT", "TRANSPORTATION", "TRAVEL", "RENT_AND_UTILITIES"
         ]
         #expect(PFCMapper.defaultCategories.count == 16)
         for primary in primaries {

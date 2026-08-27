@@ -92,10 +92,10 @@ public enum WeekKey {
     }
 
     private static func daysFromCivil(year: Int, month: Int, day: Int) -> Int {
-        var y = year
-        if month <= 2 { y -= 1 }
-        let era = (y >= 0 ? y : y - 399) / 400
-        let yoe = y - era * 400
+        var adjustedYear = year
+        if month <= 2 { adjustedYear -= 1 }
+        let era = (adjustedYear >= 0 ? adjustedYear : adjustedYear - 399) / 400
+        let yoe = adjustedYear - era * 400
         let doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1
         let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
         return era * 146097 + doe - 719468

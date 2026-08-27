@@ -69,7 +69,7 @@ struct DigestBuilderTests {
                 // Hidden: excluded from everything.
                 txn(id: "hid", amountMinor: 9999, date: "2026-08-25", isHidden: true),
                 // Outside the week: excluded.
-                txn(id: "old", amountMinor: 7777, date: "2026-08-23"),
+                txn(id: "old", amountMinor: 7777, date: "2026-08-23")
             ],
             allocations: [:],
             recurringItems: []
@@ -93,7 +93,7 @@ struct DigestBuilderTests {
                 txn(id: "e", amountMinor: 1500, date: "2026-08-28", categoryId: "fun"),
                 // A category netting negative never ranks.
                 txn(id: "neg", amountMinor: 2500, direction: .income, date: "2026-08-26",
-                    categoryId: "returns"),
+                    categoryId: "returns")
             ],
             allocations: [:],
             recurringItems: []
@@ -118,7 +118,7 @@ struct DigestBuilderTests {
                 // Earlier in August, outside the week: counts toward month-to-date.
                 txn(id: "b", amountMinor: 2000, date: "2026-08-10"),
                 // September spend never leaks into August's context.
-                txn(id: "c", amountMinor: 4000, date: "2026-09-01"),
+                txn(id: "c", amountMinor: 4000, date: "2026-09-01")
             ],
             allocations: ["groceries": 31000],
             recurringItems: []
@@ -150,7 +150,7 @@ struct DigestBuilderTests {
             id: "a", amountMinor: 10000, date: "2026-08-26", categoryId: "shopping",
             splits: [
                 .init(id: "s1", amountMinor: 7000, categoryId: "groceries", attributedTo: .member("uid-a")),
-                .init(id: "s2", amountMinor: 3000, categoryId: "home", attributedTo: .joint),
+                .init(id: "s2", amountMinor: 3000, categoryId: "home", attributedTo: .joint)
             ]
         )
         let digest = DigestBuilder.build(
@@ -180,7 +180,7 @@ struct DigestBuilderTests {
                 bill("r2", merchant: "Gym", due: "2026-08-31"),
                 bill("r3", merchant: "Insurance", due: "2026-09-07"),        // outside window
                 bill("r4", merchant: "Paused", due: "2026-09-01", isPaused: true),
-                bill("r5", merchant: "Water", due: "2026-08-29"),            // already due in-week
+                bill("r5", merchant: "Water", due: "2026-08-29")            // already due in-week
             ]
         )
         // Window is 2026-08-31 … 2026-09-06.
@@ -195,7 +195,7 @@ struct DigestBuilderTests {
             transactions: [
                 txn(id: "a", amountMinor: 3000, date: "2026-08-25", categoryId: "a"),
                 txn(id: "b", amountMinor: 2000, date: "2026-08-25", categoryId: "b"),
-                txn(id: "c", amountMinor: 1000, date: "2026-08-25", categoryId: "c"),
+                txn(id: "c", amountMinor: 1000, date: "2026-08-25", categoryId: "c")
             ],
             allocations: [:],
             recurringItems: [],
@@ -208,7 +208,7 @@ struct DigestBuilderTests {
     func codableRoundTrip() throws {
         let transactions = [
             txn(id: "a", amountMinor: 5000, date: "2026-08-25", attributedTo: .member("uid-a")),
-            txn(id: "b", amountMinor: 4000, date: "2026-08-28", categoryId: "dining"),
+            txn(id: "b", amountMinor: 4000, date: "2026-08-28", categoryId: "dining")
         ]
         let first = DigestBuilder.build(
             weekKey: week, transactions: transactions, allocations: ["groceries": 31000],

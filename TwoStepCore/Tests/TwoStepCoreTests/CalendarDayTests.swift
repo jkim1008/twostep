@@ -5,18 +5,18 @@ import Testing
 struct CalendarDayTests {
     @Test("Parses valid dates and round-trips the canonical string")
     func parsingRoundTrip() {
-        for s in ["1970-01-01", "2024-02-29", "2026-08-26", "2026-12-31", "2000-02-29"] {
-            let day = CalendarDay(dateString: s)
+        for string in ["1970-01-01", "2024-02-29", "2026-08-26", "2026-12-31", "2000-02-29"] {
+            let day = CalendarDay(dateString: string)
             #expect(day != nil)
-            #expect(day?.dateString == s)
+            #expect(day?.dateString == string)
         }
     }
 
     @Test("Rejects malformed and impossible dates")
     func rejectsInvalid() {
-        for s in ["2026-02-29", "2026-04-31", "2026-13-01", "2026-00-10",
-                  "26-08-26", "2026/08/26", "2026-8-26", "", "2026-08-00"] {
-            #expect(CalendarDay(dateString: s) == nil, "\(s) should be invalid")
+        for string in ["2026-02-29", "2026-04-31", "2026-13-01", "2026-00-10",
+                       "26-08-26", "2026/08/26", "2026-8-26", "", "2026-08-00"] {
+            #expect(CalendarDay(dateString: string) == nil, "\(string) should be invalid")
         }
     }
 
@@ -24,9 +24,9 @@ struct CalendarDayTests {
     func dayNumberRoundTrip() {
         let epoch = CalendarDay(dateString: "1970-01-01")
         #expect(epoch?.dayNumber == 0)
-        for s in ["1969-12-31", "1970-01-02", "2000-03-01", "2024-02-29", "2026-08-26", "2100-01-01"] {
-            guard let day = CalendarDay(dateString: s) else {
-                Issue.record("failed to parse \(s)")
+        for string in ["1969-12-31", "1970-01-02", "2000-03-01", "2024-02-29", "2026-08-26", "2100-01-01"] {
+            guard let day = CalendarDay(dateString: string) else {
+                Issue.record("failed to parse \(string)")
                 continue
             }
             #expect(CalendarDay(dayNumber: day.dayNumber) == day)
@@ -57,15 +57,15 @@ struct CalendarDayTests {
 
     @Test("Difference and ordering")
     func differenceAndOrdering() {
-        guard let a = CalendarDay(dateString: "2026-08-20"),
-              let b = CalendarDay(dateString: "2026-08-23")
+        guard let earlier = CalendarDay(dateString: "2026-08-20"),
+              let later = CalendarDay(dateString: "2026-08-23")
         else {
             Issue.record("parse failure")
             return
         }
-        #expect(b.days(since: a) == 3)
-        #expect(a.days(since: b) == -3)
-        #expect(a < b)
-        #expect(!(b < a))
+        #expect(later.days(since: earlier) == 3)
+        #expect(earlier.days(since: later) == -3)
+        #expect(earlier < later)
+        #expect(!(later < earlier))
     }
 }

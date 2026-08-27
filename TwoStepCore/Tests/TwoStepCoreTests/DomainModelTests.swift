@@ -54,7 +54,7 @@ struct DomainModelTests {
             discussResolvedAt: Date(timeIntervalSince1970: 1_756_000_000),
             splits: [
                 .init(id: "s1", amountMinor: 5000, categoryId: "coffee", attributedTo: .member("uid-a")),
-                .init(id: "s2", amountMinor: 3450, categoryId: nil, attributedTo: .joint),
+                .init(id: "s2", amountMinor: 3450, categoryId: nil, attributedTo: .joint)
             ]
         )
         let data = try JSONEncoder().encode(transaction)

@@ -32,17 +32,17 @@ public struct CalendarDay: Hashable, Comparable, Sendable {
 
     /// Days since 1970-01-01 → calendar day (inverse of `dayNumber`).
     public init(dayNumber: Int) {
-        let z = dayNumber + 719468
-        let era = (z >= 0 ? z : z - 146096) / 146097
-        let doe = z - era * 146097
+        let shifted = dayNumber + 719468
+        let era = (shifted >= 0 ? shifted : shifted - 146096) / 146097
+        let doe = shifted - era * 146097
         let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
         let doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
-        let mp = (5 * doy + 2) / 153
-        let d = doy - (153 * mp + 2) / 5 + 1
-        let m = mp < 10 ? mp + 3 : mp - 9
-        self.year = yoe + era * 400 + (m <= 2 ? 1 : 0)
-        self.month = m
-        self.day = d
+        let shiftedMonth = (5 * doy + 2) / 153
+        let civilDay = doy - (153 * shiftedMonth + 2) / 5 + 1
+        let civilMonth = shiftedMonth < 10 ? shiftedMonth + 3 : shiftedMonth - 9
+        self.year = yoe + era * 400 + (civilMonth <= 2 ? 1 : 0)
+        self.month = civilMonth
+        self.day = civilDay
     }
 
     /// Canonical `"YYYY-MM-DD"` form.
@@ -52,10 +52,10 @@ public struct CalendarDay: Hashable, Comparable, Sendable {
 
     /// Days since 1970-01-01 (1970-01-01 == 0, which was a Thursday).
     public var dayNumber: Int {
-        var y = year
-        if month <= 2 { y -= 1 }
-        let era = (y >= 0 ? y : y - 399) / 400
-        let yoe = y - era * 400
+        var adjustedYear = year
+        if month <= 2 { adjustedYear -= 1 }
+        let era = (adjustedYear >= 0 ? adjustedYear : adjustedYear - 399) / 400
+        let yoe = adjustedYear - era * 400
         let doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1
         let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
         return era * 146097 + doe - 719468
@@ -64,8 +64,8 @@ public struct CalendarDay: Hashable, Comparable, Sendable {
     /// 0 = Monday … 6 = Sunday.
     public var weekdayIndexFromMonday: Int {
         // Day 0 (1970-01-01) was a Thursday, i.e. 3 days after Monday.
-        let z = dayNumber + 3
-        return ((z % 7) + 7) % 7
+        let shifted = dayNumber + 3
+        return ((shifted % 7) + 7) % 7
     }
 
     public func adding(days: Int) -> CalendarDay {

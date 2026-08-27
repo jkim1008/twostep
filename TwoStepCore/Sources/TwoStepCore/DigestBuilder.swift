@@ -133,41 +133,45 @@ public enum DigestBuilder {
             WeekKey.week(weekKey, containsDateString: $0.date)
         }
 
-        // In/out totals: non-hidden, non-internal-transfer — the Dashboard
-        // net formula, over the week.
-        var totalIn = 0
-        var totalOut = 0
-        for transaction in weekTransactions
-        where !transaction.isHidden && !PFCMapper.isInternalTransfer(primary: transaction.pfcPrimary) {
-            switch transaction.direction {
-            case .income: totalIn += transaction.amountMinor
-            case .expense: totalOut += transaction.amountMinor
-            }
-        }
+        let (totalIn, totalOut) = inOutTotals(of: weekTransactions)
 
-        // Category rows: budget-eligible week spend, split-aware, with
-        // A / B / Joint drill-down figures.
-        var weekSpent: [String: Int] = [:]
-        var byAttribution: [String: [String: Int]] = [:]
-        for transaction in weekTransactions
-        where !transaction.excludeFromBudget && !transaction.isHidden {
-            let net = transaction.direction == .expense ? 1 : -1
-            if transaction.splits.isEmpty {
-                let category = transaction.categoryId ?? BudgetMath.uncategorizedCategoryId
-                weekSpent[category, default: 0] += net * transaction.amountMinor
-                byAttribution[category, default: [:]][transaction.attributedTo.rawValue, default: 0]
-                    += net * transaction.amountMinor
-            } else {
-                for split in transaction.splits {
-                    let category = split.categoryId ?? BudgetMath.uncategorizedCategoryId
-                    weekSpent[category, default: 0] += net * split.amountMinor
-                    byAttribution[category, default: [:]][split.attributedTo.rawValue, default: 0]
-                        += net * split.amountMinor
-                }
-            }
-        }
+        let topCategories = topCategoryRows(
+            weekSpend: weekSpendByCategory(of: weekTransactions),
+            allocations: allocations,
+            transactions: transactions,
+            endDay: endDay,
+            topCategoryCount: topCategoryCount
+        )
 
-        // Pace context: the month containing the week's Sunday.
+        let upcomingBills = upcomingBills(
+            from: recurringItems,
+            after: endDay,
+            windowDays: upcomingWindowDays
+        )
+
+        return WeeklyDigest(
+            weekKey: weekKey,
+            startDate: startDate,
+            endDate: endDate,
+            totalInMinor: totalIn,
+            totalOutMinor: totalOut,
+            topCategories: topCategories,
+            upcomingBills: upcomingBills
+        )
+    }
+
+    // MARK: - Private
+
+    /// Ranked category rows with pace context from the month containing the
+    /// week's Sunday: month-to-date spend through that Sunday, pace at that
+    /// day, and the per-attribution week figures.
+    private static func topCategoryRows(
+        weekSpend: (spent: [String: Int], byAttribution: [String: [String: Int]]),
+        allocations: [String: Int],
+        transactions: [Transaction],
+        endDay: CalendarDay,
+        topCategoryCount: Int
+    ) -> [CategoryDigest] {
         let month = String(format: "%04d-%02d", endDay.year, endDay.month)
         let daysInMonth = MonthKey.daysIn(month: endDay.month, year: endDay.year)
         let monthToDateTransactions = transactions.filter {
@@ -178,8 +182,7 @@ public enum DigestBuilder {
             transactions: monthToDateTransactions,
             month: month
         )
-
-        let topCategories = weekSpent
+        return weekSpend.spent
             .filter { $0.value > 0 }
             .sorted { lhs, rhs in
                 lhs.value != rhs.value ? lhs.value > rhs.value : lhs.key < rhs.key
@@ -199,14 +202,63 @@ public enum DigestBuilder {
                             daysInMonth: daysInMonth
                         )
                     },
-                    spentByAttribution: byAttribution[categoryId] ?? [:]
+                    spentByAttribution: weekSpend.byAttribution[categoryId] ?? [:]
                 )
             }
+    }
 
-        // Upcoming bills: occurrences in the window right after the week.
+    /// In/out totals: non-hidden, non-internal-transfer — the Dashboard net
+    /// formula (PRD §4.8), over the given transactions.
+    private static func inOutTotals(of transactions: [Transaction]) -> (totalIn: Int, totalOut: Int) {
+        var totalIn = 0
+        var totalOut = 0
+        for transaction in transactions
+        where !transaction.isHidden && !PFCMapper.isInternalTransfer(primary: transaction.pfcPrimary) {
+            switch transaction.direction {
+            case .income: totalIn += transaction.amountMinor
+            case .expense: totalOut += transaction.amountMinor
+            }
+        }
+        return (totalIn, totalOut)
+    }
+
+    /// Budget-eligible net spend per category, split-aware, plus the
+    /// A / B / Joint drill-down figures per category.
+    private static func weekSpendByCategory(
+        of transactions: [Transaction]
+    ) -> (spent: [String: Int], byAttribution: [String: [String: Int]]) {
+        var spent: [String: Int] = [:]
+        var byAttribution: [String: [String: Int]] = [:]
+        for transaction in transactions
+        where !transaction.excludeFromBudget && !transaction.isHidden {
+            let net = transaction.direction == .expense ? 1 : -1
+            if transaction.splits.isEmpty {
+                let category = transaction.categoryId ?? BudgetMath.uncategorizedCategoryId
+                spent[category, default: 0] += net * transaction.amountMinor
+                byAttribution[category, default: [:]][transaction.attributedTo.rawValue, default: 0]
+                    += net * transaction.amountMinor
+            } else {
+                for split in transaction.splits {
+                    let category = split.categoryId ?? BudgetMath.uncategorizedCategoryId
+                    spent[category, default: 0] += net * split.amountMinor
+                    byAttribution[category, default: [:]][split.attributedTo.rawValue, default: 0]
+                        += net * split.amountMinor
+                }
+            }
+        }
+        return (spent, byAttribution)
+    }
+
+    /// Bill occurrences in the `windowDays` after the covered week, sorted by
+    /// due date then merchant.
+    private static func upcomingBills(
+        from recurringItems: [RecurringItem],
+        after endDay: CalendarDay,
+        windowDays: Int
+    ) -> [UpcomingBill] {
         let windowStart = endDay.adding(days: 1).dateString
-        let windowEnd = endDay.adding(days: max(0, upcomingWindowDays)).dateString
-        var upcomingBills: [UpcomingBill] = []
+        let windowEnd = endDay.adding(days: max(0, windowDays)).dateString
+        var bills: [UpcomingBill] = []
         for item in recurringItems {
             let dueDates = RecurrenceEngine.occurrences(
                 of: item,
@@ -214,7 +266,7 @@ public enum DigestBuilder {
                 toDate: windowEnd
             )
             for dueDate in dueDates {
-                upcomingBills.append(UpcomingBill(
+                bills.append(UpcomingBill(
                     recurringItemId: item.id,
                     merchant: item.merchant,
                     amountMinor: item.amountMinor,
@@ -224,20 +276,11 @@ public enum DigestBuilder {
                 ))
             }
         }
-        upcomingBills.sort { lhs, rhs in
+        bills.sort { lhs, rhs in
             lhs.dueDate != rhs.dueDate
                 ? lhs.dueDate < rhs.dueDate
                 : lhs.merchant < rhs.merchant
         }
-
-        return WeeklyDigest(
-            weekKey: weekKey,
-            startDate: startDate,
-            endDate: endDate,
-            totalInMinor: totalIn,
-            totalOutMinor: totalOut,
-            topCategories: topCategories,
-            upcomingBills: upcomingBills
-        )
+        return bills
     }
 }

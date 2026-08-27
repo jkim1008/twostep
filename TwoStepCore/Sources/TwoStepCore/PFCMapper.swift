@@ -57,10 +57,11 @@ public enum PFCMapper {
         "MEDICAL": .init(name: "Medical", emoji: "🩺", colorHex: "#5CA9C9", excludeFromBudgetByDefault: false),
         "PERSONAL_CARE": .init(name: "Personal Care", emoji: "💇", colorHex: "#DB8BA9", excludeFromBudgetByDefault: false),
         "GENERAL_SERVICES": .init(name: "Services", emoji: "🛠️", colorHex: "#8AA84F", excludeFromBudgetByDefault: false),
-        "GOVERNMENT_AND_NON_PROFIT": .init(name: "Government & Donations", emoji: "🏛️", colorHex: "#6F8AB7", excludeFromBudgetByDefault: false),
+        "GOVERNMENT_AND_NON_PROFIT": .init(
+            name: "Government & Donations", emoji: "🏛️", colorHex: "#6F8AB7", excludeFromBudgetByDefault: false),
         "TRANSPORTATION": .init(name: "Transportation", emoji: "🚗", colorHex: "#4FA8A8", excludeFromBudgetByDefault: false),
         "TRAVEL": .init(name: "Travel", emoji: "✈️", colorHex: "#5C8ADB", excludeFromBudgetByDefault: false),
-        "RENT_AND_UTILITIES": .init(name: "Rent & Utilities", emoji: "🏠", colorHex: "#C9A25C", excludeFromBudgetByDefault: false),
+        "RENT_AND_UTILITIES": .init(name: "Rent & Utilities", emoji: "🏠", colorHex: "#C9A25C", excludeFromBudgetByDefault: false)
     ]
 
     /// Default category for a PFC primary, or nil for `UNKNOWN`/unmapped

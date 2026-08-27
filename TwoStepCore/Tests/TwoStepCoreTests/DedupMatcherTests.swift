@@ -45,8 +45,8 @@ struct DedupMatcherTests {
         )
     }
 
-    private func verdict(_ m: Transaction, _ i: Transaction) -> DedupMatcher.Confidence {
-        DedupMatcher.confidence(manual: m, imported: i, cashAccountIds: cashAccounts)
+    private func verdict(_ manualTxn: Transaction, _ importedTxn: Transaction) -> DedupMatcher.Confidence {
+        DedupMatcher.confidence(manual: manualTxn, imported: importedTxn, cashAccountIds: cashAccounts)
     }
 
     // MARK: - Decision table
@@ -114,8 +114,8 @@ struct DedupMatcherTests {
 
     @Test("Import's originalDescription serves as merchant fallback")
     func originalDescriptionFallback() {
-        let i = imported(merchantName: nil, originalDescription: "BLUE BOTTLE COFFEE 0042 OAK")
-        #expect(verdict(manual(), i) == .high)
+        let importedTxn = imported(merchantName: nil, originalDescription: "BLUE BOTTLE COFFEE 0042 OAK")
+        #expect(verdict(manual(), importedTxn) == .high)
     }
 
     // MARK: - Merchant fuzzy matching

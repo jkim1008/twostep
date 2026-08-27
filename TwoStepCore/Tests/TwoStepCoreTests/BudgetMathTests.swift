@@ -39,7 +39,7 @@ struct BudgetMathTests {
                 txn(id: "a", amountMinor: 5000),
                 txn(id: "b", amountMinor: 3000),
                 txn(id: "c", amountMinor: 1000, direction: .income),   // refund
-                txn(id: "d", amountMinor: 4200, categoryId: "dining"),
+                txn(id: "d", amountMinor: 4200, categoryId: "dining")
             ],
             month: "2026-08"
         )
@@ -52,7 +52,7 @@ struct BudgetMathTests {
         let spent = BudgetMath.spentPerCategory(
             transactions: [
                 txn(id: "a", amountMinor: 1000),
-                txn(id: "b", amountMinor: 6000, direction: .income),
+                txn(id: "b", amountMinor: 6000, direction: .income)
             ],
             month: "2026-08"
         )
@@ -67,7 +67,7 @@ struct BudgetMathTests {
         let spent = BudgetMath.spentPerCategory(
             transactions: [
                 txn(id: "a", amountMinor: 2000, status: .pending),
-                txn(id: "b", amountMinor: 3000, status: .posted),
+                txn(id: "b", amountMinor: 3000, status: .posted)
             ],
             month: "2026-08"
         )
@@ -83,7 +83,7 @@ struct BudgetMathTests {
                 txn(id: "c", amountMinor: 3000, isHidden: true),
                 txn(id: "d", amountMinor: 4000, date: "2026-07-31"),
                 txn(id: "e", amountMinor: 5000, date: "2026-09-01"),
-                txn(id: "f", amountMinor: 6000, date: "not-a-date"),
+                txn(id: "f", amountMinor: 6000, date: "not-a-date")
             ],
             month: "2026-08"
         )
@@ -108,7 +108,7 @@ struct BudgetMathTests {
             splits: [
                 .init(id: "s1", amountMinor: 7000, categoryId: "groceries", attributedTo: .joint),
                 .init(id: "s2", amountMinor: 2000, categoryId: "home", attributedTo: .member("uid-a")),
-                .init(id: "s3", amountMinor: 1000, categoryId: nil, attributedTo: .joint),
+                .init(id: "s3", amountMinor: 1000, categoryId: nil, attributedTo: .joint)
             ]
         )
         let spent = BudgetMath.spentPerCategory(transactions: [costco], month: "2026-08")
@@ -135,7 +135,7 @@ struct BudgetMathTests {
             transactions: [
                 txn(id: "a", amountMinor: 5000),
                 txn(id: "b", amountMinor: 4200, categoryId: "dining"),
-                txn(id: "c", amountMinor: 1000, direction: .income),
+                txn(id: "c", amountMinor: 1000, direction: .income)
             ],
             month: "2026-08"
         )
