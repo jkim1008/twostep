@@ -16,3 +16,8 @@ xcuserdata/
 *.env
 Secrets.plist
 GoogleService-Info.plist
+
+# Node (rules-tests)
+node_modules/
+firestore-debug.log
+firebase-debug.log
