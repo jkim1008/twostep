@@ -57,6 +57,27 @@ jobs:
             -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.device }}" \
             CODE_SIGNING_ALLOWED=NO | tail -50
 
+  functions-tests:
+    name: functions-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install dependencies
+        run: npm ci
+        working-directory: functions
+      - name: Build functions
+        run: npm run build
+        working-directory: functions
+      - name: Run functions tests against the emulators
+        run: npx -y firebase-tools@15 emulators:exec --only auth,functions,firestore --project demo-twostep "cd functions && node node_modules/vitest/vitest.mjs run"
+
   rules-tests:
     name: rules-tests
     runs-on: ubuntu-latest
